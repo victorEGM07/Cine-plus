@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101018">
+  <title>CinePlus | Catálogo de películas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; }
+    body { background:#101018; color:#f5f5f5; font-family:Arial,sans-serif; min-height:100vh; }
+    .navbar-cine { background:#1b1b27; border-bottom:2px solid #c71932; }
+    .marca { color:#ff304f!important; font-size:27px; font-weight:700; letter-spacing:.2px; }
+    .hero { background:linear-gradient(135deg,#25202c,#15151e); border:1px solid #302a37; border-radius:18px; padding:clamp(24px,5vw,42px); margin:30px 0 25px; }
+    .texto-rojo { color:#ff405b; }
+    .form-control { background:#292936; border:1px solid #494958; color:#fff; }
+    .form-control:focus { background:#292936; color:#fff; border-color:#e32140; box-shadow:0 0 0 .2rem #e3214030; }
+    .form-control::placeholder { color:#b7b7c4; }
+    .form-select { background-color:#292936; border-color:#494958; color:#fff; }
+    .form-select:focus { background-color:#292936; border-color:#e32140; color:#fff; box-shadow:0 0 0 .2rem #e3214030; }
+    .pelicula { background:#20202b; border:1px solid #333341; border-radius:14px; height:100%; transition:transform .2s,border-color .2s; }
+    .pelicula:hover { transform:translateY(-5px); border-color:#c71932; }
+    .pelicula-cuerpo { padding:22px; }
+    .genero { display:inline-block; background:#3a2029; color:#ff8293; padding:5px 10px; border-radius:20px; font-size:13px; }
+    .calificacion { color:#ffd166; font-weight:700; font-size:18px; }
+    .btn-rojo { background:#e32140; color:#fff; border:none; }
+    .btn-rojo:hover { background:#b91730; color:#fff; }
+    .seccion-titulo { border-left:4px solid #e32140; padding-left:12px; }
+    .sin-resultados { background:#20202b; border-radius:12px; padding:35px; text-align:center; }
+    .aviso-demo { background:#25202c; border:1px solid #574b31; color:#f5d98d; border-radius:12px; }
+    footer { color:#9292a0; border-top:1px solid #30303a; margin-top:50px; padding:20px; text-align:center; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-cine">
+    <div class="container">
+      <a class="navbar-brand marca" href="./">🎬 CinePlus</a>
+      <span class="text-secondary small">Catálogo de películas</span>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="hero">
+      <h1 class="fw-bold">Tu cine, <span class="texto-rojo">a tu manera.</span></h1>
+      <p class="text-secondary mb-4">Explora y organiza tu colección de películas.</p>
+      <form id="formulario-busqueda">
+        <div class="row g-2">
+          <div class="col-md-9">
+            <input type="search" id="busqueda-peliculas" class="form-control form-control-lg" placeholder="Buscar por título, género o director..." aria-label="Buscar películas">
+          </div>
+          <div class="col-md-3 d-grid">
+            <button class="btn btn-rojo btn-lg" type="submit">Buscar películas</button>
+          </div>
+        </div>
+      </form>
+      <small class="text-secondary d-block mt-2">La búsqueda filtra el catálogo mientras escribes.</small>
+    </section>
+
+    <div class="aviso-demo p-3 mb-4" role="note">
+      Esta versión estática permite explorar, buscar y marcar favoritas. Para guardar cambios en la base de datos, CinePlus necesita un servidor con PHP y MySQL.
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <h2 class="seccion-titulo h4 mb-0">Catálogo de películas</h2>
+      <span class="text-secondary" id="contador-peliculas" aria-live="polite"></span>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <label for="orden-peliculas" class="text-secondary">Ordenar por:</label>
+      <select id="orden-peliculas" class="form-select w-auto">
+        <option value="recientes">Más recientes</option>
+        <option value="calificacion">Mejor calificadas</option>
+        <option value="anio">Año más reciente</option>
+        <option value="titulo">Título A–Z</option>
+      </select>
+      <button type="button" class="btn btn-outline-warning" id="filtro-favoritas" aria-pressed="false">☆ Solo favoritas</button>
+    </div>
+
+    <div class="row g-4" id="catalogo-peliculas" aria-live="polite"></div>
+    <footer>
+      <p class="mb-1">🎬 CinePlus</p>
+      <small>Tu entretenimiento, tu película.</small>
+    </footer>
+  </main>
+
+  <script>
+    const peliculas = [
+      {id:16,titulo:"Titanic",genero:"amor",anio:2010,director:"jose ignacio",calificacion:10.0},
+      {id:15,titulo:"tula vs el panadero",genero:"amor",anio:2009,director:"joel espitia",calificacion:1.0},
+      {id:14,titulo:"manuel el niño polla",genero:"amor",anio:2006,director:"ponchito",calificacion:10.0},
+      {id:13,titulo:"KEVIN VS EL MEWING",genero:"sususpenso",anio:2027,director:"la china",calificacion:10.0},
+      {id:12,titulo:"La remontada",genero:"Drama",anio:2021,director:"Jose  PRODUCE",calificacion:9.8},
+      {id:11,titulo:"Jeovani vs el rastrillo",genero:"Ciencia ficción",anio:2002,director:"victor Dammer",calificacion:8.0},
+      {id:10,titulo:"Cecyte vs Conalep",genero:"Accion",anio:2026,director:"joel producciones",calificacion:10.0},
+      {id:9,titulo:"Boku no piko",genero:"Accion y Drama",anio:2012,director:"ponchito",calificacion:9.9},
+      {id:8,titulo:"ponchito el ataque",genero:"Accion y Drama",anio:2017,director:"pashito producciones",calificacion:9.0},
+      {id:7,titulo:"manuel el moustro de hentai",genero:"Amor y terror",anio:2026,director:"ponchito",calificacion:10.0},
+      {id:6,titulo:"Roberto vs el jabon",genero:"Accion",anio:2000,director:"Jose Roberto Hernandez",calificacion:10.0},
+      {id:5,titulo:"La proyectada",genero:"Amor",anio:2026,director:"Irwing Miguel Archivor Lopez",calificacion:10.0},
+      {id:4,titulo:"Espstein y la isla perdida",genero:"suspeso,misterio",anio:2019,director:"Jeffrey Espstein",calificacion:10.0},
+      {id:3,titulo:"Free Fire La pelicula",genero:"Accion y Drama",anio:2026,director:"Manuel Alberto Ku itza",calificacion:9.5},
+      {id:1,titulo:"Eso",genero:"Terror",anio:2001,director:"ponchito",calificacion:9.8}
+    ];
+
+    const catalogo = document.querySelector("#catalogo-peliculas");
+    const formulario = document.querySelector("#formulario-busqueda");
+    formulario.addEventListener("submit", evento => evento.preventDefault());
+
+    for (const pelicula of peliculas) {
+      const columna = document.createElement("div");
+      columna.className = "col-12 col-sm-6 col-lg-4 col-xl-3";
+      columna.dataset.pelicula = "";
+      columna.dataset.id = String(pelicula.id);
+      columna.dataset.titulo = pelicula.titulo;
+      columna.dataset.genero = pelicula.genero;
+      columna.dataset.director = pelicula.director;
+      columna.dataset.anio = String(pelicula.anio);
+      columna.dataset.calificacion = String(pelicula.calificacion);
+
+      const articulo = document.createElement("article");
+      articulo.className = "pelicula";
+      const cuerpo = document.createElement("div");
+      cuerpo.className = "pelicula-cuerpo";
+
+      const genero = document.createElement("span");
+      genero.className = "genero";
+      genero.textContent = pelicula.genero;
+      const titulo = document.createElement("h3");
+      titulo.className = "h5 fw-bold mt-3 mb-2";
+      titulo.textContent = pelicula.titulo;
+      const anio = document.createElement("p");
+      anio.className = "text-secondary mb-2";
+      anio.textContent = `Año: ${pelicula.anio}`;
+      const director = document.createElement("p");
+      director.className = "mb-3";
+      const etiquetaDirector = document.createElement("span");
+      etiquetaDirector.className = "text-secondary";
+      etiquetaDirector.textContent = "Director: ";
+      director.append(etiquetaDirector, document.createTextNode(pelicula.director));
+      const calificacion = document.createElement("p");
+      calificacion.className = "calificacion mb-4";
+      calificacion.textContent = `★ ${String(pelicula.calificacion).replace(/\.0$/, "")}/10`;
+      const acciones = document.createElement("div");
+      acciones.className = "d-flex gap-2";
+      const favorita = document.createElement("button");
+      favorita.type = "button";
+      favorita.className = "btn btn-outline-warning btn-sm boton-favorita";
+      favorita.textContent = "☆";
+      favorita.title = "Agregar a favoritas";
+      favorita.setAttribute("aria-label", `Agregar ${pelicula.titulo} a favoritas`);
+
+      acciones.append(favorita);
+      cuerpo.append(genero, titulo, anio, director, calificacion, acciones);
+      articulo.append(cuerpo);
+      columna.append(articulo);
+      catalogo.append(columna);
+    }
+  </script>
+  <script src="assets/js/cineplus.js" defer></script>
+</body>
+</html>
